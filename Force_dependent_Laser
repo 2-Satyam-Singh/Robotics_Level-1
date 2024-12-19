@@ -1,0 +1,45 @@
+#define laser 3
+#define force A0
+#define e 2.718
+
+void setup() {
+  pinMode(laser, OUTPUT);  // Set laser pin as OUTPUT
+  pinMode(force, INPUT);   // Set force sensor pin as INPUT
+  Serial.begin(9600);      // Initialize serial communication
+}
+
+void loop() {
+  // Read and invert the force sensor value
+  int forceValue = 1023 - analogRead(force);
+
+  // Use exponential mapping with exponent = e
+  int laserPWM = exponentialMap(forceValue, 0, 1023, 0, 255, e); // e is exponent (2.718)
+
+  // Set laser brightness using PWM
+  analogWrite(laser, laserPWM);
+
+  // Print sensor and PWM values to Serial Monitor
+  Serial.print("Force Value: ");
+  Serial.print(forceValue);
+  Serial.print(" -> Laser PWM: ");
+  Serial.println(laserPWM);
+
+  delay(100); // Short delay for stability
+}
+
+// Exponential mapping function
+int exponentialMap(int value, int fromLow, int fromHigh, int toLow, int toHigh, float exponent) {
+  // Normalize the input value to a range of 0.0 to 1.0
+  float normalized = (float)(value - fromLow) / (fromHigh - fromLow);
+
+  // Ensure the normalized value stays within bounds (0.0 to 1.0)
+  normalized = constrain(normalized, 0.0, 1.0);    //  Don't really need this... but ok for now
+
+  // Apply exponential scaling using e
+  normalized = pow(normalized, exponent);
+
+  // Map to the output range
+  int mappedValue = toLow + (toHigh - toLow) * normalized;
+
+  return mappedValue;
+}
